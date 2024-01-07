@@ -4,9 +4,13 @@ import morgan from 'morgan'
 import { router } from './routes/api.route.js'
 import { Server } from 'socket.io'
 import http from 'http'
+import { dirname } from 'path'
+import { fileURLToPath } from 'url'
 import dotenv from 'dotenv'
 dotenv.config()
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
@@ -24,6 +28,18 @@ app.get('/', (req, res) => {
 
 app.use('/api', router);
 
+io.on('connection', (socket) => {
+  console.log(`${socket.id} user connected`);
+
+  socket.on('chat message', (msg) => {
+    io.emit('chat message', msg);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('user disconnected');
+  });
+});
+
 app.use((req, res, next) => {
   next(createError.NotFound());
 });
@@ -37,4 +53,4 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`🚀 @ http://localhost:${PORT}`));
+server.listen(PORT, () => console.log(`🚀 @ http://localhost:${PORT}`));
