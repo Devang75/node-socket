@@ -6,6 +6,7 @@ import { Server } from 'socket.io'
 import http from 'http'
 import { dirname } from 'path'
 import { fileURLToPath } from 'url'
+import { instrument } from '@socket.io/admin-ui'
 import dotenv from 'dotenv'
 dotenv.config()
 
@@ -13,7 +14,20 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const app = express();
 const server = http.createServer(app);
-const io = new Server(server);
+const io = new Server(server, {
+  cors: {
+    origin: ["https://admin.socket.io", '*' ],
+    credentials: true
+  }
+});
+
+instrument(io,  {
+  auth: {
+    type: "basic",
+    username: "admin",
+    password: "$2b$10$heqvAkYMez.Va6Et2uXInOnkCT6/uQj1brkrbyG3LpopDklcq7ZOS" // "changeit" encrypted with bcrypt
+  },
+});
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(morgan('dev'));
